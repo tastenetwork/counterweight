@@ -13,10 +13,12 @@ The full process it runs, in order, with no skipping and no reordering: video ga
 - `config.js` — one line: the URL of your data API
 - `supabase/` — the edge function source and database schema you deploy to your own free Supabase project
 
-## Make your own
+## Make your own — two editions
 
-See **[SETUP.md](SETUP.md)** — about 15 minutes with a GitHub account and a free Supabase account, and it is written so you can hand it to Claude Code and say "set this up for me."
+**Google Sheets edition (easiest, recommended for most people):** one Google Sheet runs everything — it serves the assessment, stores results as rows, and emails you each completed candidate from your own Gmail. Needs only a Google account, about 5 minutes. See **[google-sheets-edition/SHEETS-SETUP.md](google-sheets-edition/SHEETS-SETUP.md)**.
 
-Your data stays in your accounts. Nothing here phones home.
+**Full web edition:** your own hosted site on free GitHub Pages with a free Supabase database and the stage-by-stage web dashboard. About 15 minutes; written so you can hand it to Claude Code and say "set this up for me." See **[SETUP.md](SETUP.md)**.
+
+Either way, your data stays in your accounts. Nothing here phones home.
 
 Built by [Taste Network](https://tastenetwork.com).
