@@ -95,7 +95,7 @@ footer{margin-top:40px;font-size:.78rem;color:var(--muted)}
   <div style="display:flex;justify-content:flex-start"><button class="ghost" id="btn-home" hidden>&larr; Start over</button></div>
 
   <section id="view-home">
-    <div class="eyebrow">Taste Network hiring system</div>
+    <div class="eyebrow">The Counterweight hiring system</div>
     <h1>Counterweight Assessment</h1>
     <p class="muted">Two steps before any live interview: a short video and a 13 minute working-style read, scored against the leader doing the hiring. You are not looking for another you. You are looking for the person who finishes what you start.</p>
     <div class="home-paths">
@@ -104,7 +104,7 @@ footer{margin-top:40px;font-size:.78rem;color:var(--muted)}
       <button class="path card" id="go-team"><b>I am on the team</b><span>Same assessment candidates take. Your profile joins the team map so the leader can see what the team covers and what it lacks.</span></button>
     </div>
     <p class="note">This is a data point, not the decision. Nobody gets hired or rejected by a score here. It tells the interview where to dig.</p>
-    <footer>Taste Network &middot; <a href="#" id="dash-link" style="color:var(--muted)">team dashboard</a>
+    <footer>Built by <a href="https://tastenetwork.com" style="color:var(--muted)" rel="noopener">Taste Network</a> &middot; <a href="#" id="dash-link" style="color:var(--muted)">team dashboard</a>
       <span id="dash-key-row" hidden><input type="text" id="dash-key-inp" placeholder="access key" style="max-width:180px;font-size:.8rem;padding:6px 8px;margin-left:8px">
       <button id="dash-go" style="font-size:.8rem;padding:6px 10px">open</button></span></footer>
   </section>
@@ -169,6 +169,7 @@ footer{margin-top:40px;font-size:.78rem;color:var(--muted)}
     <p class="note">These four instincts are not grades. Every profile is strong somewhere. This tool only asks whether your shape complements the leader's shape.</p>
   </section>
 </div>
+<script src="config.js"></script>
 <script>
 "use strict";
 var AXES=["starter","finisher","detail","builder"];
@@ -299,7 +300,8 @@ function scoreStyle(ans){
 }
 function scoreCog(ans){var r=0;COG.forEach(function(c,i){if(ans[i]===c.ans)r++;});return r;}
 
-var BASE="https://ivdfjstwznfiukpbgjrj.supabase.co/functions/v1/counterweight";
+var BASE=window.CW_API;
+var FOR=null;try{var fp=new URLSearchParams(location.search).get("for")||"";if(/^[0-9a-f\-]{36}$/.test(fp))FOR=fp;}catch(e){}
 var VIEWS=["home","name","video","q","leader-x","done"];
 function show(v){VIEWS.forEach(function(x){document.getElementById("view-"+x).hidden=(x!==v);});
   document.getElementById("btn-home").hidden=(v==="home");window.scrollTo(0,0);}
@@ -326,7 +328,7 @@ function startFlow(mode){
       su=document.getElementById("name-sub"),er=document.getElementById("email-req");
   if(mode==="leader"){ey.textContent="Leader calibration";ti.textContent="How you actually work";
     su.textContent="Answer about yourself as you are, not as you plan to be. The whole tool keys off this.";
-    er.textContent="(optional)";}
+    er.textContent="(recommended: your candidates' results get emailed here)";}
   else if(mode==="team"){ey.textContent="Team profile";ti.textContent="Before you start";
     su.textContent="Same assessment candidates take. Instinct over polish; the first answer is usually the honest one.";
     er.textContent="(optional)";}
@@ -358,7 +360,7 @@ document.getElementById("btn-video").addEventListener("click",function(){
   err.textContent="";
   var btn=document.getElementById("btn-video");btn.disabled=true;btn.textContent="Submitting...";
   fetch(BASE+"/apply",{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({name:state.name,email:state.email,video_url:v})})
+    body:JSON.stringify({name:state.name,email:state.email,video_url:v,leader_id:FOR})})
     .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
     .then(function(res){
       btn.disabled=false;btn.textContent="Submit video and unlock the assessment";
@@ -454,11 +456,20 @@ function finishTaker(){
   show("done");
   fetch(BASE+"/submit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
     .then(function(r){if(!r.ok)throw 0;return r.json();})
-    .then(function(){
+    .then(function(j){
       sv.innerHTML="<h3>Saved</h3><p class='small muted'>"+
         (state.mode==="candidate"?"Your video and assessment are both in. We review them together before scheduling live interviews; if there is a fit, a calendar invitation comes to your email.":
          state.mode==="leader"?"Your calibration is in. Candidates and the team are now scored against this profile.":
          "Your profile joined the team map.")+"</p>";
+      if(state.mode==="leader"&&j&&j.id){
+        var link=location.origin+location.pathname+"?for="+j.id+"#assess";
+        var lb=document.createElement("div");
+        lb.innerHTML="<p class='small' style='margin-top:12px'><b>Your candidate link</b></p><div class='codebox'>"+esc(link)+"</div><p class='small muted'>"+(state.email?"Send it to applicants. Each completed assessment is scored against your profile and emailed to "+esc(state.email)+".":"Send it to applicants. Each completed assessment is scored against your profile. Calibrate again with an email to get results sent to your inbox.")+"</p>";
+        sv.appendChild(lb);
+        var cb=document.createElement("button");cb.className="primary";cb.textContent="Copy my candidate link";
+        cb.addEventListener("click",function(){navigator.clipboard.writeText(link).then(function(){cb.textContent="Copied";}).catch(function(){cb.textContent="Select and copy above";});});
+        sv.appendChild(cb);
+      }
     })
     .catch(function(){
       var fallback={name:state.name,email:state.email||null,kind:state.mode==="leader"?"leader":state.mode,

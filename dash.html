@@ -103,6 +103,8 @@ footer{margin-top:40px;font-size:.78rem;color:var(--muted)}
     <h3>Settings</h3>
     <p class="small muted">The calendar link candidates get when you invite them to a live interview (Calendly, Cal.com, or any booking page).</p>
     <input type="url" id="set-booking" placeholder="https://calendly.com/you/interview">
+    <p class="small muted" style="margin-top:10px">Fallback email for candidate results (used when a candidate did not come through a leader link, or the leader gave no email).</p>
+    <input type="email" id="set-notify" placeholder="you@company.com">
     <div class="navrow"><span class="small" id="set-ok"></span><button class="primary mini" id="set-save">Save</button></div>
   </div>
   <div class="card">
@@ -113,6 +115,7 @@ footer{margin-top:40px;font-size:.78rem;color:var(--muted)}
   </div>
   <p class="note">A data point, not the decision. Counterweight 78 and up: strong, advance. 60 to 77: partial, probe live. Final scorecard: 18 of 25 or you do not have your hire yet. Even if you like them. Especially if you like them.</p>
 </div>
+<script src="config.js"></script>
 <script>
 "use strict";
 var AXES=["starter","finisher","detail","builder"];
@@ -192,7 +195,7 @@ function encodeResult(body){return btoa(unescape(encodeURIComponent(JSON.stringi
 
 var ROWS=[];
 var SETTINGS={};
-var BASE="https://ivdfjstwznfiukpbgjrj.supabase.co/functions/v1/counterweight";
+var BASE=window.CW_API;
 var KEY=new URLSearchParams(location.search).get("key")||"";
 document.getElementById("json-link").href=BASE+"/api/results?key="+encodeURIComponent(KEY);
 var STAGE_ORDER=["scored","assessment","invited","interviewed","test_sent","test_done","offer","hired","passed"];
@@ -218,6 +221,7 @@ var TEST_BRIEFS=[
 var leaders=[],candidates=[],team=[];
 var chosenLeaderId=null;
 try{chosenLeaderId=localStorage.getItem("cw-leader");}catch(e){}
+function leaderById(id){for(var i=0;i<leaders.length;i++){if(leaders[i].id===id)return leaders[i];}return null;}
 function act(body,cb){
   body.key=KEY;
   fetch(BASE+"/action",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
@@ -331,7 +335,7 @@ function paint(){
   var P=document.getElementById("dash-people");
   if(!candidates.length){P.innerHTML="<h3>No candidates yet</h3><p class='small muted'>Send applicants the site link. The video gate and the assessment run themselves; candidates appear here the moment the video link is in.</p>";}
   else{
-    var rows=candidates.map(function(p){return {p:p,cw:(leader&&p.axes)?counterweight(p,leader):null};})
+    var rows=candidates.map(function(p){var L=leaderById(p.leader_id)||leader;return {p:p,L:L,cw:(L&&p.axes)?counterweight(p,L):null};})
       .sort(function(a,b){
         var sa=STAGE_ORDER.indexOf(a.p.stage||"scored"),sb=STAGE_ORDER.indexOf(b.p.stage||"scored");
         if(sa!==sb)return sa-sb;
@@ -353,7 +357,8 @@ function paint(){
       if(ev.target.tagName==="A")return;
       var i=tr.getAttribute("data-i"),det=P.querySelector("tr[data-detail='"+i+"']");
       if(!det.hidden){det.hidden=true;det.firstElementChild.innerHTML="";return;}
-      var r=rows[i];var cell=det.firstElementChild;cell.innerHTML=profileHTML(r.p,leader);
+      var r=rows[i];var cell=det.firstElementChild;cell.innerHTML=profileHTML(r.p,r.L||leader);
+      if(r.p.leader_id&&r.L&&leader&&r.L.id!==leader.id)cell.insertAdjacentHTML("beforeend","<p class='small muted'><b>Applying to:</b> "+esc(r.L.name)+"</p>");
       if(r.cw){
         if(r.cw.flags.length)cell.insertAdjacentHTML("beforeend","<p class='flag'>"+r.cw.flags.map(esc).join("<br>")+"</p>");
         cell.insertAdjacentHTML("beforeend","<p class='small'><b>Covers the gaps at "+r.cw.coverage+"%</b> (gap axes: "+r.cw.gapAxes.map(function(a){return AXIS_LABEL[a];}).join(", ")+")</p>");
@@ -387,8 +392,9 @@ function paint(){
 }
 document.getElementById("set-save").addEventListener("click",function(){
   var v=document.getElementById("set-booking").value.trim();
+  var nv=document.getElementById("set-notify").value.trim();
   var ok=document.getElementById("set-ok");
-  act({settings:{booking_url:v}},function(m){ok.textContent=m;ok.className="small flag";});
+  act({settings:{booking_url:v,notify_email:nv}},function(m){ok.textContent=m;ok.className="small flag";});
 });
 document.getElementById("btn-import").addEventListener("click",function(){
   var err=document.getElementById("imp-err");err.textContent="";
@@ -424,7 +430,8 @@ team=ROWS.filter(function(d){return d.kind==="team";});}
 fetch(BASE+"/api/results?key="+encodeURIComponent(KEY))
   .then(function(r){if(!r.ok)throw r.status;return r.json();})
   .then(function(d){ROWS=d.rows||[];SETTINGS=d.settings||{};derive();
-    document.getElementById("set-booking").value=SETTINGS.booking_url||"";paint();})
+    document.getElementById("set-booking").value=SETTINGS.booking_url||"";
+    document.getElementById("set-notify").value=SETTINGS.notify_email||"";paint();})
   .catch(function(e){document.getElementById("dash-leader").innerHTML="<h3>Could not load results</h3><p class='small muted'>"+(e===401?"Wrong or missing access key. The address must end with dash.html?key=YOURKEY":"Check your connection and reload.")+"</p>";});
 </script>
 </body>
