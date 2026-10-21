@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Counterweight Assessment</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+:root{
+  --bg:#faf8f6; --surface:#ffffff; --fg:#26222a; --muted:#6d6572; --line:#e5dfe2;
+  --accent:#7d2e3b; --accent-soft:#f3e6e8; --accent-fg:#ffffff;
+  --good:#2e6e4e; --warn:#a06a1f; --bad:#9c3a30;
+  --display:"Fraunces",Georgia,serif; --body:"Source Sans 3",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root{
+  --bg:#1b181d; --surface:#252127; --fg:#ece7ea; --muted:#9b929f; --line:#3a343d;
+  --accent:#c96475; --accent-soft:#3a2a2e; --accent-fg:#1b181d;
+  --good:#6fbb93; --warn:#d9a24a; --bad:#d97b6f; color-scheme:dark;
+}}
+*{box-sizing:border-box} html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:17px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));}
+.wrap{max-width:760px;margin:0 auto;padding:28px 0 64px;}
+h1,h2,h3{font-family:var(--display);font-weight:600;line-height:1.15;margin:0}
+h1{font-size:2.1rem} h2{font-size:1.45rem} h3{font-size:1.1rem}
+p{margin:.5em 0}
+.muted{color:var(--muted)} .small{font-size:.85rem}
+.eyebrow{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin-top:16px}
+button{font-family:var(--body);font-size:1rem;cursor:pointer;border-radius:8px;border:1px solid var(--line);
+  background:var(--surface);color:var(--fg);padding:10px 18px}
+button.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);font-weight:700}
+button.ghost{background:none;border:none;color:var(--muted);padding:8px 6px}
+button.mini{font-size:.82rem;padding:6px 12px}
+button:focus-visible,.choice:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=text],input[type=email],input[type=url],select{font-family:var(--body);font-size:1rem;padding:10px 12px;border:1px solid var(--line);
+  border-radius:8px;background:var(--surface);color:var(--fg);width:100%;max-width:420px}
+textarea{font-family:var(--body);font-size:.9rem;width:100%;min-height:72px;border:1px solid var(--line);
+  border-radius:8px;background:var(--surface);color:var(--fg);padding:10px}
+.home-paths{display:grid;gap:12px;margin-top:20px}
+.path{display:block;text-align:left;padding:16px 18px;width:100%}
+.path b{display:block;font-size:1.05rem}
+.path span{color:var(--muted);font-size:.9rem}
+.progress{height:5px;background:var(--line);border-radius:3px;margin:18px 0 26px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--accent);border-radius:3px;transition:width .25s}
+.qnum{font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.qtext{font-size:1.25rem;font-family:var(--display);font-weight:500;margin-bottom:18px}
+.choices{display:grid;gap:10px}
+.choice{display:block;width:100%;text-align:left;padding:14px 16px;font-size:1rem;line-height:1.4}
+.choice:hover{border-color:var(--accent)}
+.choice.sel{border-color:var(--accent);background:var(--accent-soft)}
+.likert{display:flex;gap:8px;flex-wrap:wrap}
+.likert .choice{flex:1;min-width:84px;text-align:center;font-size:.85rem;padding:12px 6px}
+.navrow{display:flex;justify-content:space-between;align-items:center;margin-top:26px;gap:10px}
+.axisrow{margin:14px 0}
+.axisrow .lbl{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:4px;gap:10px}
+.axisrow .lbl b{font-weight:700}
+.track{position:relative;height:14px;background:var(--line);border-radius:7px}
+.track .fill{position:absolute;top:0;bottom:0;left:0;background:var(--accent);border-radius:7px;min-width:3px}
+.track .tick{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--fg);border-radius:2px}
+.legend{display:flex;gap:18px;font-size:.78rem;color:var(--muted);margin-top:8px;flex-wrap:wrap}
+.legend .k{display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--accent);vertical-align:-1px;margin-right:5px}
+.legend .k2{display:inline-block;width:3px;height:13px;background:var(--fg);vertical-align:-2px;margin-right:5px}
+.verdict{display:inline-block;padding:4px 12px;border-radius:999px;font-size:.85rem;font-weight:700}
+.v-strong{background:var(--good);color:var(--bg)} .v-partial{background:var(--warn);color:var(--bg)} .v-no{background:var(--bad);color:var(--bg)}
+.flag{color:var(--bad);font-weight:600;font-size:.9rem}
+.ok{color:var(--good);font-weight:600;font-size:.9rem}
+.row-table{width:100%;border-collapse:collapse;margin-top:10px;font-variant-numeric:tabular-nums}
+.row-table th{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+.row-table td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.row-table tr.click{cursor:pointer} .row-table tr.click:hover td{background:var(--accent-soft)}
+.pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:.75rem;font-weight:700;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.pill.hot{border-color:var(--accent);color:var(--accent)}
+.probelist{margin:8px 0 0;padding-left:20px}
+.probelist li{margin:6px 0}
+.codebox{font-family:ui-monospace,monospace;font-size:.75rem;word-break:break-all;background:var(--accent-soft);
+  border-radius:8px;padding:12px;margin-top:8px;user-select:all}
+.note{border-left:3px solid var(--accent);padding:8px 14px;background:var(--surface);border-radius:0 8px 8px 0;margin-top:14px;font-size:.9rem;color:var(--muted)}
+.checkrow{display:flex;gap:10px;align-items:flex-start;margin:8px 0;font-size:.95rem}
+.checkrow input{margin-top:4px}
+.qlist{margin:8px 0;padding-left:22px}
+.qlist li{margin:7px 0}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.scgrid{display:grid;gap:10px;margin-top:10px}
+.scgrid .screq{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.scgrid select{max-width:140px}
+footer{margin-top:40px;font-size:.78rem;color:var(--muted)}
+@media (max-width:480px){ .likert .choice{min-width:58px} h1{font-size:1.7rem} }
+@media (prefers-reduced-motion: reduce){ .progress i{transition:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div style="display:flex;justify-content:flex-start"><button class="ghost" id="btn-home" hidden>&larr; Start over</button></div>
+
+  <section id="view-home">
+    <div class="eyebrow">Taste Network hiring system</div>
+    <h1>Counterweight Assessment</h1>
+    <p class="muted">Two steps before any live interview: a short video and a 13 minute working-style read, scored against the leader doing the hiring. You are not looking for another you. You are looking for the person who finishes what you start.</p>
+    <div class="home-paths">
+      <button class="path card" id="go-candidate"><b>I am a candidate</b><span>Step one: a 3 minute video. Step two: the assessment, about 13 minutes. Both before any interview is scheduled.</span></button>
+      <button class="path card" id="go-leader"><b>I am the one hiring</b><span>Calibrate first. 5 minutes, 17 questions about how you actually work. Every candidate is scored against this.</span></button>
+      <button class="path card" id="go-team"><b>I am on the team</b><span>Same assessment candidates take. Your profile joins the team map so the leader can see what the team covers and what it lacks.</span></button>
+    </div>
+    <p class="note">This is a data point, not the decision. Nobody gets hired or rejected by a score here. It tells the interview where to dig.</p>
+    <footer>Taste Network &middot; <a href="#" id="dash-link" style="color:var(--muted)">team dashboard</a>
+      <span id="dash-key-row" hidden><input type="text" id="dash-key-inp" placeholder="access key" style="max-width:180px;font-size:.8rem;padding:6px 8px;margin-left:8px">
+      <button id="dash-go" style="font-size:.8rem;padding:6px 10px">open</button></span></footer>
+  </section>
+
+  <section id="view-name" hidden>
+    <div class="eyebrow" id="name-eyebrow">Candidate assessment</div>
+    <h2 id="name-title">Before you start</h2>
+    <p class="muted" id="name-sub">Answer with your instinct, not your resume. First guess is usually the honest one.</p>
+    <div class="card">
+      <label for="inp-name"><b>Your name</b></label><br>
+      <input type="text" id="inp-name" autocomplete="name" placeholder="First and last name">
+      <div style="margin-top:14px"><label for="inp-email"><b>Email</b> <span class="small muted" id="email-req">(we will only use this about the role)</span></label><br>
+      <input type="email" id="inp-email" autocomplete="email" placeholder="you@example.com"></div>
+      <div class="navrow"><span class="small flag" id="name-err"></span><button class="primary" id="btn-begin">Continue</button></div>
+    </div>
+  </section>
+
+  <section id="view-video" hidden>
+    <div class="eyebrow">Step one of two</div>
+    <h2>The video</h2>
+    <p class="muted">Record a video of yourself answering the five questions below, in order. <b>Three minutes maximum.</b> One take is fine; polish is not the point.</p>
+    <div class="card">
+      <ol class="qlist">
+        <li>Why are you interested in this position?</li>
+        <li>What do you know about our company?</li>
+        <li>What is your ideal work environment?</li>
+        <li>What are your strengths?</li>
+        <li>Where do you see yourself in five years?</li>
+      </ol>
+      <p class="small muted">Record on your phone or with Loom. Upload it where we can watch it: Loom, Google Drive with link sharing on, or an unlisted YouTube video. Then paste the link below. Check the link works in a private browser window before submitting.</p>
+      <label for="inp-video"><b>Your video link</b></label><br>
+      <input type="url" id="inp-video" placeholder="https://...">
+      <div class="navrow"><span class="small flag" id="video-err"></span><button class="primary" id="btn-video">Submit video and unlock the assessment</button></div>
+    </div>
+    <p class="note">How you handle these instructions is part of the evaluation: the time limit, all five questions, in order, a link that works.</p>
+  </section>
+
+  <section id="view-q" hidden>
+    <div class="progress"><i id="prog" style="width:0%"></i></div>
+    <div class="qnum" id="qnum"></div>
+    <div class="qtext" id="qtext"></div>
+    <div class="choices" id="qchoices"></div>
+    <div class="navrow">
+      <button class="ghost" id="btn-back">&larr; Back</button>
+      <span class="small muted" id="qhint"></span>
+    </div>
+  </section>
+
+  <section id="view-leader-x" hidden>
+    <div class="progress"><i style="width:92%"></i></div>
+    <h2>Last one</h2>
+    <p class="muted">What do you most need taken off your plate? Pick up to three.</p>
+    <div class="card" id="needs-box"></div>
+    <div class="navrow"><span></span><button class="primary" id="btn-leader-done">Finish calibration</button></div>
+  </section>
+
+  <section id="view-done" hidden>
+    <div class="eyebrow">Done</div>
+    <h2 id="done-title">Your working profile</h2>
+    <div class="card" id="done-profile"></div>
+    <div class="card" id="done-save"></div>
+    <p class="note">These four instincts are not grades. Every profile is strong somewhere. This tool only asks whether your shape complements the leader's shape.</p>
+  </section>
+</div>
+<script>
+"use strict";
+var AXES=["starter","finisher","detail","builder"];
+var AXIS_LABEL={starter:"Starter",finisher:"Finisher",detail:"Detail",builder:"Builder"};
+var AXIS_DESC={starter:"ignition, improvising, new things",finisher:"closing loops, carrying work to shipped",
+  detail:"verifying, precision, facts before action",builder:"hands-on making, learning by doing"};
+var STYLE_KEYS=["drive","connect","steady","precise"];
+var STYLE_LABEL={drive:"Drive",connect:"Connect",steady:"Steady",precise:"Precise"};
+var PROBES={
+  finisher:"Walk me through the last project you personally carried from 80 percent to shipped. What were the final 48 hours like?",
+  detail:"Tell me about a time a small detail you caught, or missed, changed an outcome.",
+  starter:"When nobody tells you what to do next, what happens? Give me a real week.",
+  builder:"What is something you built end to end with your own hands, and what broke first?",
+  cog:"Before advancing, give a short paid test task with written multi-step instructions and a deadline.",
+  drive:"Two strong drivers can collide. Ask: tell me about working for a forceful founder. What did you push back on, and how did it go?",
+  steady:"The weeks here are irregular. Ask how they keep their own system steady when the inputs are not."};
+function counterweight(cand,leader){
+  var gaps=AXES.filter(function(a){return leader.axes[a]<45;});
+  var gapAxes=gaps.length?gaps:["finisher","detail"];
+  var coverage=gapAxes.reduce(function(s,a){return s+cand.axes[a];},0)/gapAxes.length;
+  var peaks=AXES.filter(function(a){return leader.axes[a]>=70;});
+  var collide=1;
+  if(peaks.length){
+    var pen=peaks.reduce(function(s,a){return s+Math.min(1,Math.max(0,cand.axes[a]-60)/40);},0)/peaks.length;
+    collide=1-pen;
+  }
+  var cog=cand.cog||{right:0,total:6};
+  var style=cand.style||{drive:50,connect:50,steady:50,precise:50};
+  var cogPts=(cog.right/cog.total)*14;
+  var finPts=Math.min(cand.axes.finisher,70)/70*8;
+  var prePts=Math.min(style.precise,70)/70*8;
+  var score=Math.round(coverage*0.5+collide*20+cogPts+finPts+prePts);
+  var flags=[];
+  if(cog.right<3)flags.push("Below the accuracy floor: "+cog.right+" of "+cog.total+" on the work samples");
+  if(cand.axes.finisher<40)flags.push("Low Finisher ("+cand.axes.finisher+"): this is the axis the role exists to cover");
+  if((style.steady+style.precise)/2<40)flags.push("Low Steady and Precise: reliability risk for an EA seat");
+  var verdict=score>=78?"strong":score>=60?"partial":"no";
+  if(flags.length&&verdict==="strong")verdict="partial";
+  var probes=[];
+  var weakest=gapAxes.slice().sort(function(a,b){return cand.axes[a]-cand.axes[b];});
+  if(weakest.length)probes.push(PROBES[weakest[0]]);
+  if(cog.right<5)probes.push(PROBES.cog);
+  if(peaks.indexOf("starter")>=0&&cand.axes.starter>60)probes.push("You both score high on Starter. Ask who closed the loops at their last job, by name.");
+  if(leader.style&&leader.style.drive>=70&&style.drive>=70)probes.push(PROBES.drive);
+  if(style.steady<50)probes.push(PROBES.steady);
+  return {score:score,verdict:verdict,flags:flags,probes:probes.slice(0,3),gapAxes:gapAxes,peaks:peaks,coverage:Math.round(coverage)};
+}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];});}
+function barsHTML(axes,leaderAxes){
+  var h="";
+  AXES.forEach(function(a){
+    var v=axes[a];
+    h+="<div class='axisrow'><div class='lbl'><b>"+AXIS_LABEL[a]+"</b><span class='muted small'>"+AXIS_DESC[a]+" &middot; "+v+"</span></div>"+
+       "<div class='track'><span class='fill' style='width:"+v+"%'></span>"+
+       (leaderAxes?("<span class='tick' style='left:"+leaderAxes[a]+"%'></span>"):"")+"</div></div>";
+  });
+  if(leaderAxes)h+="<div class='legend'><span><span class='k'></span>this person</span><span><span class='k2'></span>the leader</span></div>";
+  return h;
+}
+function profileHTML(body,leader){
+  if(!body.axes)return "<p class='small muted'>Video is in; assessment not finished yet.</p>";
+  var h=barsHTML(body.axes,leader?leader.axes:null);
+  if(body.style){h+="<p class='small muted' style='margin-top:14px'>Workstyle: "+
+    STYLE_KEYS.map(function(k){return STYLE_LABEL[k]+" "+body.style[k];}).join(" &middot; ")+"</p>";}
+  if(body.cog)h+="<p class='small muted'>Work samples: "+body.cog.right+" of "+body.cog.total+" correct</p>";
+  if(body.kind==="leader"){
+    var gaps=AXES.filter(function(a){return body.axes[a]<45;}),peaks=AXES.filter(function(a){return body.axes[a]>=70;});
+    h+="<p class='small' style='margin-top:12px'><b>Target counterweight:</b> high "+
+      (gaps.length?gaps.map(function(a){return AXIS_LABEL[a];}).join(" and "):"Finisher and Detail")+
+      (peaks.length?"; should not compete with your "+peaks.map(function(a){return AXIS_LABEL[a];}).join(" or "):"")+".</p>";
+    if(body.needs&&body.needs.length)h+="<p class='small muted'>Off the plate first: "+esc(body.needs.join(", ").toLowerCase())+".</p>";
+  }
+  return h;
+}
+function decodeResult(code){return JSON.parse(decodeURIComponent(escape(atob(code.trim()))));}
+function encodeResult(body){return btoa(unescape(encodeURIComponent(JSON.stringify(body))));}
+
+var PAIRS=[
+["starter","finisher","I am at my best in the first 10 percent of a project, when nothing is decided yet.","I am at my best in the last 10 percent, when it is all about landing it."],
+["starter","finisher","I tend to open more loops than I close.","I tend to close more loops than I open."],
+["starter","detail","I would rather launch rough and fix it live.","I would rather check it twice and launch once."],
+["starter","detail","Momentum first, details after.","Details first, momentum after."],
+["starter","builder","A new idea gives me more energy than a finished product.","A finished, working thing gives me more energy than a new idea."],
+["starter","builder","I like inventing the way.","I like making the thing."],
+["finisher","detail","Done matters more than perfect.","Right matters more than fast."],
+["finisher","detail","My instinct is to clear the list.","My instinct is to make sure the list is correct."],
+["finisher","builder","I keep systems running smoothly.","I build things with my hands."],
+["finisher","builder","Give me a checklist and a deadline.","Give me a workbench and a prototype."],
+["detail","builder","I trust research.","I trust trial and error."],
+["detail","builder","Before acting, I gather the facts.","I learn by building the first version."]];
+var STYLE_ITEMS=[
+["drive","I am comfortable telling someone senior they are wrong."],
+["connect","I warm up a room quickly."],
+["steady","A predictable week is a good week."],
+["precise","I catch typos other people miss."],
+["drive","When a group stalls, I push for a decision."],
+["connect","I would rather persuade than instruct."],
+["steady","People describe me as calm under pressure."],
+["precise","I would rather follow a proven process than improvise one."],
+["drive","I compete to win, even in small things."],
+["connect","I usually sense what people around me are feeling."],
+["steady","I finish one thing before I start the next."],
+["precise","I double-check my work before anyone sees it."]];
+var LIKERT=["Strongly disagree","Disagree","Neutral","Agree","Strongly agree"];
+var COG=[
+{q:'Read this note: "Team, the tasting is confirmed for Thursday, March 12 at the King Street venue. We expect 48 guests at $150 a head, so budget $6,800 for food. Invoices go to Dana before the 12th." What is wrong with it?',
+ opts:["The venue is not named","48 guests at $150 is $7,200, not $6,800","Invoices should go out after the event, not before","Nothing is wrong"],ans:1},
+{q:"It is 8:02 am Monday. Five things are waiting. Which do you handle first?",
+ opts:["40 unread emails from the weekend","Your boss's 9:00 am flight: online check-in closes at 8:30","The weekly report, due at 5 pm","A vendor asking about an unpaid invoice","Booking Friday's team dinner"],ans:1},
+{q:"Choose the option that names a month, unless any option names a color, in which case choose the last option in the list.",
+ opts:["Tuesday","October","Crimson","Coffee","None of these"],ans:4},
+{q:'Your boss says: "Get the Madrid partner on a call this week, but only after the proposal PDF is final, and the proposal needs the new pricing from our agency president first." What is step one?',
+ opts:["Email the Madrid partner some times","Ask the agency president for the new pricing","Finalize the proposal PDF","Book a room for the call"],ans:1},
+{q:"Your CEO in Atlanta is free 9:00 to 11:00 am Eastern. The partner in Madrid can only meet after 4:00 pm Madrid time. Madrid is 6 hours ahead. Which slot works?",
+ opts:["9:00 am Eastern","10:15 am Eastern","11:30 am Eastern","No slot works this day"],ans:1},
+{q:"You discover your boss is double-booked tonight at 7 pm: an investor call and their anniversary dinner. They are on a flight, unreachable until 5 pm. What do you do?",
+ opts:["Wait until 5 pm and ask","Cancel the dinner reservation now","Message the investor's assistant now with two alternative times this week, and hold every option open until your boss lands","Leave both on the calendar and let your boss decide live"],ans:2}];
+var NEEDS=["Inbox and calendar","Follow-ups and loose ends","Research and preparation","Keeping systems and dashboards updated","Getting documents and deliverables finished"];
+function scoreConative(choices){
+  var t={starter:0,finisher:0,detail:0,builder:0};
+  PAIRS.forEach(function(p,i){t[p[choices[i]]]++;});
+  var out={};AXES.forEach(function(a){out[a]=Math.round(t[a]/6*100);});return out;
+}
+function scoreStyle(ans){
+  var sums={drive:0,connect:0,steady:0,precise:0};
+  STYLE_ITEMS.forEach(function(it,i){sums[it[0]]+=ans[i];});
+  var out={};STYLE_KEYS.forEach(function(k){out[k]=Math.round((sums[k]-3)/12*100);});return out;
+}
+function scoreCog(ans){var r=0;COG.forEach(function(c,i){if(ans[i]===c.ans)r++;});return r;}
+
+var BASE="https://ivdfjstwznfiukpbgjrj.supabase.co/functions/v1/counterweight";
+var VIEWS=["home","name","video","q","leader-x","done"];
+function show(v){VIEWS.forEach(function(x){document.getElementById("view-"+x).hidden=(x!==v);});
+  document.getElementById("btn-home").hidden=(v==="home");window.scrollTo(0,0);}
+document.getElementById("btn-home").addEventListener("click",function(){state=null;show("home");});
+document.getElementById("dash-link").addEventListener("click",function(e){e.preventDefault();
+  document.getElementById("dash-key-row").hidden=false;document.getElementById("dash-key-inp").focus();});
+document.getElementById("dash-go").addEventListener("click",function(){
+  var k=document.getElementById("dash-key-inp").value.trim();
+  if(k)location.href="dash.html?key="+encodeURIComponent(k);});
+
+var state=null;
+function buildSteps(mode){
+  var steps=[];
+  PAIRS.forEach(function(p,i){steps.push({t:"pair",i:i});});
+  if(mode==="leader"){STYLE_KEYS.forEach(function(k){steps.push({t:"self",k:k});});}
+  else{STYLE_ITEMS.forEach(function(it,i){steps.push({t:"likert",i:i});});
+       COG.forEach(function(c,i){steps.push({t:"cog",i:i});});}
+  return steps;
+}
+function startFlow(mode){
+  state={mode:mode,name:"",email:"",id:null,steps:buildSteps(mode),at:0,pair:new Array(12).fill(null),
+         likert:new Array(12).fill(null),cog:new Array(6).fill(null),self:{},needs:[]};
+  var ey=document.getElementById("name-eyebrow"),ti=document.getElementById("name-title"),
+      su=document.getElementById("name-sub"),er=document.getElementById("email-req");
+  if(mode==="leader"){ey.textContent="Leader calibration";ti.textContent="How you actually work";
+    su.textContent="Answer about yourself as you are, not as you plan to be. The whole tool keys off this.";
+    er.textContent="(optional)";}
+  else if(mode==="team"){ey.textContent="Team profile";ti.textContent="Before you start";
+    su.textContent="Same assessment candidates take. Instinct over polish; the first answer is usually the honest one.";
+    er.textContent="(optional)";}
+  else{ey.textContent="Candidate application";ti.textContent="Before you start";
+    su.textContent="Two steps: a 3 minute video, then a 13 minute assessment. Both finish today, before any interview is scheduled.";
+    er.textContent="(required, we will only use this about the role)";}
+  document.getElementById("inp-name").value="";document.getElementById("inp-email").value="";
+  document.getElementById("name-err").textContent="";
+  show("name");
+}
+document.getElementById("go-leader").addEventListener("click",function(){startFlow("leader");});
+document.getElementById("go-candidate").addEventListener("click",function(){startFlow("candidate");});
+document.getElementById("go-team").addEventListener("click",function(){startFlow("team");});
+document.getElementById("btn-begin").addEventListener("click",function(){
+  var n=document.getElementById("inp-name").value.trim();
+  var e=document.getElementById("inp-email").value.trim();
+  var err=document.getElementById("name-err");
+  if(!n){err.textContent="Name is required.";return;}
+  if(state.mode==="candidate"&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)){err.textContent="A valid email is required for candidates.";return;}
+  if(e&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)){err.textContent="That email does not look right.";return;}
+  state.name=n;state.email=e;state.at=0;
+  if(state.mode==="candidate"){document.getElementById("video-err").textContent="";document.getElementById("inp-video").value="";show("video");}
+  else{renderQ();show("q");}
+});
+document.getElementById("btn-video").addEventListener("click",function(){
+  var v=document.getElementById("inp-video").value.trim();
+  var err=document.getElementById("video-err");
+  if(!/^https?:\/\/\S+\.\S+/.test(v)){err.textContent="Paste a full link that starts with https://";return;}
+  err.textContent="";
+  var btn=document.getElementById("btn-video");btn.disabled=true;btn.textContent="Submitting...";
+  fetch(BASE+"/apply",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({name:state.name,email:state.email,video_url:v})})
+    .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
+    .then(function(res){
+      btn.disabled=false;btn.textContent="Submit video and unlock the assessment";
+      if(!res.ok){err.textContent=res.j&&res.j.error?res.j.error:"Could not submit. Try again.";return;}
+      state.id=res.j.id;state.video=v;renderQ();show("q");
+    })
+    .catch(function(){btn.disabled=false;btn.textContent="Submit video and unlock the assessment";
+      err.textContent="Could not submit. Check your connection and try again.";});
+});
+document.getElementById("btn-back").addEventListener("click",function(){
+  if(state.at>0){state.at--;renderQ();}else if(state.mode==="candidate")show("video");else show("name");});
+
+function renderQ(){
+  var st=state.steps[state.at];
+  var total=state.steps.length+(state.mode==="leader"?1:0);
+  document.getElementById("prog").style.width=Math.round(state.at/total*100)+"%";
+  var box=document.getElementById("qchoices");box.innerHTML="";
+  var qn=document.getElementById("qnum"),qt=document.getElementById("qtext"),qh=document.getElementById("qhint");
+  function mk(label,on,sel){var b=document.createElement("button");b.className="choice"+(sel?" sel":"");
+    b.textContent=label;b.addEventListener("click",on);box.appendChild(b);return b;}
+  if(st.t==="pair"){
+    var p=PAIRS[st.i];
+    qn.textContent="Part one \u00b7 "+(st.i+1)+" of 12 \u00b7 which is more true of you?";
+    qt.textContent="Pick the one that is more you. Both are good answers.";
+    mk(p[2],function(){answer("pair",st.i,0);},state.pair[st.i]===0);
+    mk(p[3],function(){answer("pair",st.i,1);},state.pair[st.i]===1);
+    qh.textContent="No neutral option on purpose.";
+  }else if(st.t==="likert"){
+    var it=STYLE_ITEMS[st.i];
+    qn.textContent="Part two \u00b7 "+(st.i+1)+" of 12";
+    qt.textContent=it[1];
+    var wrapL=document.createElement("div");wrapL.className="likert";box.appendChild(wrapL);
+    LIKERT.forEach(function(l,v){var b=document.createElement("button");
+      b.className="choice"+(state.likert[st.i]===v+1?" sel":"");b.textContent=l;
+      b.addEventListener("click",function(){answer("likert",st.i,v+1);});wrapL.appendChild(b);});
+    qh.textContent="";
+  }else if(st.t==="cog"){
+    var c=COG[st.i];
+    qn.textContent="Part three \u00b7 "+(st.i+1)+" of 6 \u00b7 real work";
+    qt.textContent=c.q;
+    c.opts.forEach(function(o,v){mk(o,function(){answer("cog",st.i,v);},state.cog[st.i]===v);});
+    qh.textContent="One answer is scored correct.";
+  }else if(st.t==="self"){
+    qn.textContent="Self-rating \u00b7 "+STYLE_LABEL[st.k];
+    var DESC={drive:"How hard do you push: confronting, deciding, competing?",
+      connect:"How naturally do you warm rooms, persuade, read people?",
+      steady:"How calm and consistent are you, one thing at a time?",
+      precise:"How exacting are you: process, double-checks, typos caught?"};
+    qt.textContent=DESC[st.k];
+    ["Low","Below average","Average","Above average","High"].forEach(function(l,v){
+      mk(l,function(){answer("self",st.k,v*25);},state.self[st.k]===v*25);});
+    qh.textContent="Rate yourself as the people around you would.";
+  }
+}
+function answer(kind,key,val){
+  if(kind==="self")state.self[key]=val;else state[kind][key]=val;
+  if(state.at<state.steps.length-1){state.at++;renderQ();}
+  else finishFlow();
+}
+function finishFlow(){
+  if(state.mode==="leader"){
+    var nb=document.getElementById("needs-box");nb.innerHTML="";
+    NEEDS.forEach(function(n,i){var l=document.createElement("label");l.className="checkrow";
+      var c=document.createElement("input");c.type="checkbox";c.id="need-"+i;c.value=n;
+      l.appendChild(c);l.appendChild(document.createTextNode(n));nb.appendChild(l);});
+    show("leader-x");
+  }else finishTaker();
+}
+document.getElementById("btn-leader-done").addEventListener("click",function(){
+  state.needs=Array.prototype.slice.call(document.querySelectorAll("#needs-box input:checked")).map(function(c){return c.value;});
+  finishTaker();
+});
+function buildBody(){
+  var axes=scoreConative(state.pair);
+  var body={axes:axes};
+  if(state.mode==="leader"){body.style={drive:state.self.drive==null?50:state.self.drive,
+    connect:state.self.connect==null?50:state.self.connect,steady:state.self.steady==null?50:state.self.steady,
+    precise:state.self.precise==null?50:state.self.precise};}
+  else{body.style=scoreStyle(state.likert);body.cog={right:scoreCog(state.cog),total:COG.length};}
+  if(state.mode==="candidate"&&state.id){body.id=state.id;}
+  else{body.name=state.name;body.email=state.email||null;body.kind=state.mode==="leader"?"leader":state.mode;
+    if(state.mode==="leader")body.needs=state.needs;}
+  return body;
+}
+function finishTaker(){
+  var body=buildBody();
+  var display={kind:state.mode==="leader"?"leader":state.mode,axes:body.axes,style:body.style,cog:body.cog,needs:state.needs};
+  document.getElementById("done-title").textContent=
+    display.kind==="leader"?"What you are building around":"Your working profile";
+  document.getElementById("done-profile").innerHTML=profileHTML(display,null);
+  var sv=document.getElementById("done-save");
+  sv.innerHTML="<h3>Saving&hellip;</h3>";
+  show("done");
+  fetch(BASE+"/submit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
+    .then(function(r){if(!r.ok)throw 0;return r.json();})
+    .then(function(){
+      sv.innerHTML="<h3>Saved</h3><p class='small muted'>"+
+        (state.mode==="candidate"?"Your video and assessment are both in. We review them together before scheduling live interviews; if there is a fit, a calendar invitation comes to your email.":
+         state.mode==="leader"?"Your calibration is in. Candidates and the team are now scored against this profile.":
+         "Your profile joined the team map.")+"</p>";
+    })
+    .catch(function(){
+      var fallback={name:state.name,email:state.email||null,kind:state.mode==="leader"?"leader":state.mode,
+        video_url:state.video||null,axes:body.axes,style:body.style,cog:body.cog,needs:state.needs};
+      var code=encodeResult(fallback);
+      sv.innerHTML="<h3>Could not save automatically</h3><p class='small muted'>Copy the code below and send it to the person who sent you this link; pasting it on their dashboard adds your result. Or try again.</p>"+
+        "<div class='codebox' id='code-out'></div>";
+      document.getElementById("code-out").textContent=code;
+      var rb=document.createElement("button");rb.className="primary";rb.style.marginTop="10px";rb.textContent="Try again";
+      rb.addEventListener("click",function(){finishTaker();});
+      sv.appendChild(rb);
+    });
+}
+if(location.hash==="#assess")startFlow("candidate");
+else if(location.hash==="#leader")startFlow("leader");
+else if(location.hash==="#team")startFlow("team");
+else show("home");
+</script>
+</body>
+</html>
