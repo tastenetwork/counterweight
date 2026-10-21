@@ -17,6 +17,18 @@ What you need: a Google account. That is all.
 
 You are setting up the Counterweight hiring system for this person, Google Sheets edition. Everything runs inside their own Google account; no other accounts or hosting are needed. Be their guide: do the steps your tools allow, and give exact click-paths for the steps only they can do (Google's script editor and deploy dialog require their clicks).
 
+### 0. Which role are they hiring? Tailor before you build
+
+The default build is for an executive assistant. Ask one question first: "Are you hiring an EA, or a different role? If different, paste the job description."
+
+If they give a job description (director of communications, social media manager, operations, anything):
+
+- **Keep unchanged:** the five video questions, Part one (the 12 instinct pairs), Part two (the 12 workstyle items), and all scoring. That is the counterweight engine and it is role-agnostic by design.
+- **Regenerate from the job description:** the six Part three work samples and the four test project briefs. Each work sample keeps the exact same shape as the originals: multiple choice, four or five options, exactly one scored-correct answer, answerable in under a minute, and each one tests one of the six skills in the role's real context: catching a detail, triaging a Monday morning, following a precise instruction, sequencing dependent tasks, a scheduling constraint, and a judgment call under pressure. Each test project brief should simulate two to four hours of the role's real work, with deliberate ambiguity and a clear deliverable.
+- **Present everything for approval before building.** Say: "Here are your six assessment questions and your four test project briefs, built from your job description. Does this all look good?" Show each question with its answer options and which answer scores correct. Only after they confirm, apply the changes: in `Index.html`, replace the entries of the `COG` array (keep the structure: `q`, `opts`, `ans` as the zero-based index of the correct option); in `Code.gs`, replace the four test-brief lines inside the Playbook rows. Then continue with the setup below.
+
+If they are hiring an EA, skip this and build as-is.
+
 ### 1. Get the two source files
 
 Fetch these from the public repository (curl, web fetch, or have the person open them in a browser and copy the raw contents):
